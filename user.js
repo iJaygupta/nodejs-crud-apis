@@ -17,18 +17,6 @@ module.exports.getModel = function () {
     let connection = dbConfig.connect();
     return connection.model("user", userSchema);
 };
-//
 
-
-// pagination = {
-//                             "totalRecords": countData[0].totalRecords,
-//                             "totalPages": Math.ceil(countData[0].totalRecords / resPerPage),
-//                             "currentPage": page,
-//                             "resPerPage": resPerPage,
-//                             "hasPrevPage": page > 1,
-//                             "hasNextPage": page < Math.ceil(countData[0].totalRecords / resPerPage),
-//                             "previousPage": page > 1 ? page - 1 : null,
-//                             "nextPage": page < Math.ceil(countData[0].totalRecords / resPerPage) ? page + 1 : null
-// }
 
 
