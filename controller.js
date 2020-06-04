@@ -1,11 +1,13 @@
 let User = require("./user.js");
+const { ObjectID }  = require('mongodb')
 
 module.exports.addUser = function (req) {
     return new Promise((resolve, reject) => {
         User.getModel().insertMany(req.body).then((res) => {
             resolve({
                 status: 200,
-                message: "User Successfully Added"
+                message: "User Successfully Added",
+                data  : res[0]
             });
         }).catch((err) => {
             reject({
@@ -17,10 +19,19 @@ module.exports.addUser = function (req) {
 }
 
 module.exports.getUser = function (req) {
+    let searchKeyword = req.query.searchKeyword;
+    let populate= {};
+    if (searchKeyword) {
+        populate["firstName"] = { "$regex": new RegExp(searchKeyword) }
+        // populate["firstName"] = `/${searchKeyword}/`
+
+    }
+    console.log("searchKeyword ==>>", searchKeyword)    
     return new Promise((resolve, reject) => {
-        User.getModel().find().then((res) => {
+        User.getModel().find(populate).then((res) => {            
             resolve({
                 status: 200,
+                message: "Get User List Successfully",
                 data: res
             });
         }).catch((err) => {
@@ -34,13 +45,28 @@ module.exports.getUser = function (req) {
 
 module.exports.updateUser = function (req) {
     return new Promise((resolve, reject) => {
-        User.getModel().updateOne(
-            { _id: req.query.id },
-            { $set: req.body }
-        ).then((res) => {
+        if(!ObjectID.isValid(req.params.userId)){
+            return reject({
+                status: 422,
+                message: "Invalid Identifier"
+            })
+        }
+        
+        User.getModel().findOneAndUpdate(
+            { _id: req.params.userId },
+            { $set: req.body },
+            { new : req}
+        ).then((res) => {       
+            if(res == null){
+                return resolve({
+                    status : 404,
+                    message:"User Not Found"
+                })
+            }     
             resolve({
                 status: 200,
-                message: "User Successfully Updated"
+                message: "User Successfully Updated",
+                data : res
             })
         }).catch((err) => {
             console.log(err);
@@ -54,10 +80,24 @@ module.exports.updateUser = function (req) {
 
 module.exports.deleteUser = function (req) {
     return new Promise((resolve, reject) => {
-        User.getModel().deleteMany({ "_id": req.query.id }).then((res) => {
+        if(!ObjectID.isValid(req.params.userId)){
+            return reject({
+                status: 422,
+                message: "Invalid Identifier"
+            })
+        }
+        User.getModel().findByIdAndDelete({ _id : req.params.userId })
+        .then((res) => {
+            if(res == null){
+               return resolve({
+                    status: 404,
+                    message: "User Not Found",
+                })
+            }
             resolve({
                 status: 200,
-                message: "User Successfully Deleted"
+                message: "User Successfully Deleted",
+                data : res
             })
         }).catch((err) => {
             reject({
@@ -68,31 +108,3 @@ module.exports.deleteUser = function (req) {
     })
 }
 
-module.exports.getFilteredUser = function (req) {
-    console.log(req.body);
-    return new Promise((resolve, reject) => {
-        User.getModel().aggregate(
-            [
-                {
-                    $match: {
-                        createdAt: {
-                            $gte: "2018-04-26T07:14:10.164Z",
-                            $lte: new Date()
-                        }
-                    }
-                }
-            ]
-        ).then((res) => {
-            resolve({
-                status: 200,
-                data: res
-            })
-        }).catch((err) => {
-            reject({
-                status: 500,
-                message: "Error while fetching user"
-            });
-        })
-    })
-
-}

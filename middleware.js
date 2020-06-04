@@ -1,5 +1,5 @@
 module.exports = (req, res, next) => {
-    if (req.headers.authorization == "Basic YWRtaW46cjNAY3RpMG4=") {
+    if (req.headers.authorization == "Bearer YWRtaW46cjNAY3RpMG4=") {
         console.log("middleware example");
         next();
     } else {

@@ -1,13 +1,15 @@
 const express = require("express");
+const expressJoi = require('express-joi')
 const app = express();
 const bodyParser = require('body-parser');
 let operation = require('./controller');
+const Joi = expressJoi.Joi;
 
 const checkAuth = require('./middleware')
 
 app.use(bodyParser.json());
 
-app.get('/get-route', checkAuth , (req, res) => {
+app.get('/api/v1/user', checkAuth , (req, res) => {
     operation.getUser(req).then((data) => {
         res.send(data);
     }).catch((err) => {
@@ -15,7 +17,12 @@ app.get('/get-route', checkAuth , (req, res) => {
     })
 })
 
-app.post('/post-route',checkAuth, (req, res) => {
+app.post('/api/v1/user', checkAuth, expressJoi.joiValidate({
+    firstName: Joi.string().required(),
+    lastName: Joi.string(),
+    mobile: Joi.number(),
+    email: Joi.string(),
+}) ,(req, res) => {
     operation.addUser(req).then((data) => {
         res.send(data);
     }).catch((err) => {
@@ -23,29 +30,23 @@ app.post('/post-route',checkAuth, (req, res) => {
     })
 })
 
-app.put('/put-route',checkAuth, (req, res) => {
+app.put('/api/v1/user/:userId',checkAuth, (req, res) => {
     operation.updateUser(req).then((data) => {
-        res.send(data);
+        res.status(data.status).send(data);
     }).catch((err) => {
         res.send(err);
     })
 })
 
-app.delete('/delete-route',checkAuth, (req, res) => {
+app.delete('/api/v1/user/:userId',checkAuth, (req, res) => {
     operation.deleteUser(req).then((data) => {
-        res.send(data);
-    }).catch((err) => {
-        res.send(err);
+        res.status(data.status).send(data);
+    }).catch((error) => {
+        res.status(error.status).send(error);
+        
     })
 })
 
-app.post('/get-filter-route',checkAuth, (req, res) => {
-    operation.getFilteredUser(req).then((data) => {
-        res.send(data);
-    }).catch((err) => {
-        res.send(err);
-    })
-})
 
 app.listen(3000, () => {
     console.log("server is running on port 3000")
